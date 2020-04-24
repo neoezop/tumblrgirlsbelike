@@ -8,14 +8,15 @@ from flask import session
 from flask import url_for, abort, render_template, flash
 from functools import wraps
 from hashlib import md5
-
+import os
 
 SECRET_KEY = 'z\xf2\x05\xeeywJ\xdb\xfe\x8crM\x0b%F\xcb'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-db = SqliteDatabase('_.db')
+dir_path = os.path.dirname(__file__)
+db = SqliteDatabase(dir_path + "data.db")
 
 
 class BaseModel(Model):
@@ -35,7 +36,7 @@ class User(BaseModel):
 
 
 class Post(BaseModel):
-    #TODO: image class for storing and uploading images
+    # TODO: image class for storing and uploading images
     image = CharField()
     text = CharField(140)
     datetime = DateTimeField()
@@ -53,6 +54,7 @@ def login_required(f):
         if not session.get('logged_in'):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
+
     return inner
 
 
@@ -164,10 +166,10 @@ def create():
 
     return render_template('create.html')
 
+
 @app.context_processor
 def _inject_user():
     return {'current_user': get_current_user()}
 
-if __name__ == '__main__':
-    create_tables()
-    app.run()
+
+
