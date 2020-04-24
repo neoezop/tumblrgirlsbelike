@@ -95,10 +95,6 @@ def after_request(response):
     return response
 
 
-@app.route("/")
-def homepage():
-    return render_template("somehomepage.html")
-
 
 @app.route('/register/', methods=['GET', 'POST'])
 def register():
