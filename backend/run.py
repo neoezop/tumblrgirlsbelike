@@ -1,4 +1,4 @@
-import db_server
+from backend import db_server
 
 from flask import Flask
 

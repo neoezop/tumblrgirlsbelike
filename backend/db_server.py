@@ -95,6 +95,10 @@ def after_request(response):
     return response
 
 
+@app.route("/")
+def homepage():
+    return Flask.render_template("index.html")
+
 
 @app.route('/register/', methods=['GET', 'POST'])
 def register():
@@ -166,6 +170,3 @@ def create():
 @app.context_processor
 def _inject_user():
     return {'current_user': get_current_user()}
-
-
-
