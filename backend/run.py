@@ -1,13 +1,11 @@
-from backend import db_server
-
+import db_server
 from flask import Flask
 
+SECRET_KEY = 'z\xf2\x05\xeeywJ\xdb\xfe\x8crM\x0b%F\xcb'
 app = Flask(__name__)
+app.config.from_object(__name__)
+app.register_blueprint(db_server.api)
 
 if __name__ == '__main__':
     db_server.create_tables()
     app.run()
-
-@app.route("/")
-def homepage():
-    return Flask.render_template("index.html")

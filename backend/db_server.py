@@ -1,7 +1,6 @@
 from peewee import *
 import datetime
-from flask import Flask
-from flask import g
+from flask import Blueprint, Response
 from flask import redirect
 from flask import request
 from flask import session
@@ -10,13 +9,10 @@ from functools import wraps
 from hashlib import md5
 import os
 
-SECRET_KEY = 'z\xf2\x05\xeeywJ\xdb\xfe\x8crM\x0b%F\xcb'
-
-app = Flask(__name__)
-app.config.from_object(__name__)
+api = Blueprint('api', __name__)
 
 dir_path = os.path.dirname(__file__)
-db = SqliteDatabase(dir_path + "data.db")
+db = SqliteDatabase(dir_path + "/data.db")
 
 
 class BaseModel(Model):
@@ -84,40 +80,36 @@ def get_object_or_404(model, *expressions):
         abort(404)
 
 
-@app.before_request
+@api.before_request
 def before_request():
     db.connect()
 
 
-@app.after_request
+@api.after_request
 def after_request(response):
     db.close()
     return response
 
 
-@app.route("/")
-def homepage():
-    return Flask.render_template("index.html")
-
-
-@app.route('/register/', methods=['GET', 'POST'])
+@api.route('/register/', methods=['POST'])
 def register():
-    if request.method == 'POST' and request.form['username']:
-        pw_hash = md5(request.form['password'].encode('utf-8')).hexdigest()
+    data = request.get_json()
+    if request.method == 'POST' and data['username']:
+        pw_hash = md5(data['password'].encode('utf-8')).hexdigest()
         try:
             with db.atomic():
                 user = User.create(
-                    username=request.form['username'],
+                    username=data['username'],
                     password=pw_hash)
         except IntegrityError:
-            flash('Username is not unique!')
+            # Возвращается, если аккаунт уже создан (мб поменять код ошибки)
+            return Response(status=200)
         else:
             auth_user(user)
-            return redirect(url_for('homepage'))
-    return render_template('register.html')
+            return Response(status=201)
 
 
-@app.route('/login/', methods=['GET', 'POST'])
+@api.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST' and request.form['username']:
         try:
@@ -131,24 +123,22 @@ def login():
             auth_user(user)
             return redirect(url_for('homepage'))
 
-    return render_template('login.html')
 
-
-@app.route('/logout/')
+@api.route('/logout/')
 def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
     return redirect(url_for('homepage'))
 
 
-@app.route('/<username>')
+@api.route('/<username>')
 def user_page(username):
     user = get_object_or_404(User, User.username == username)
     posts = user.get_posts()
     return object_list('user_page.html', posts, 'post_list', user=user)
 
 
-@app.route('/create/', methods=['GET', 'POST'])
+@api.route('/create/', methods=['GET', 'POST'])
 @login_required
 def create():
     user = get_current_user()
@@ -167,6 +157,6 @@ def create():
     return render_template('create.html')
 
 
-@app.context_processor
+@api.context_processor
 def _inject_user():
     return {'current_user': get_current_user()}
