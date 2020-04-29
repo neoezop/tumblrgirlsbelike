@@ -1,4 +1,3 @@
-from peewee import *
 import datetime
 from flask import Blueprint, Response
 from flask import redirect
@@ -7,41 +6,9 @@ from flask import session
 from flask import url_for, abort, render_template, flash
 from functools import wraps
 from hashlib import md5
-import os
+from database import *
 
 api = Blueprint('api', __name__)
-
-dir_path = os.path.dirname(__file__)
-db = SqliteDatabase(dir_path + "/data.db")
-
-
-class BaseModel(Model):
-    class Meta:
-        database = db
-
-
-class User(BaseModel):
-    username = CharField(20, unique=True)
-    password = CharField()
-
-    def get_posts(self):
-        return (Post
-                .select()
-                .where(Post.user == self)
-                .orderby(Post.datetime))
-
-
-class Post(BaseModel):
-    # TODO: image class for storing and uploading images
-    image = CharField()
-    text = CharField(140)
-    datetime = DateTimeField()
-    user = ForeignKeyField(User, backref='posts')
-
-
-def create_tables():
-    with db:
-        db.create_tables([User, Post])
 
 
 def login_required(f):
@@ -70,7 +37,7 @@ def auth_user(user):
 
 def get_current_user():
     if session.get('logged_in'):
-        return User.get(User.id == session['user_id'])
+        return User.get(User.username == session['username'])
 
 
 def get_object_or_404(model, *expressions):
@@ -131,30 +98,35 @@ def logout():
     return redirect(url_for('homepage'))
 
 
-@api.route('/<username>')
+@api.route('/<username>/')
 def user_page(username):
     user = get_object_or_404(User, User.username == username)
     posts = user.get_posts()
     return object_list('user_page.html', posts, 'post_list', user=user)
 
 
-@api.route('/create/', methods=['GET', 'POST'])
+@api.route('/create/', methods=['POST'])
 @login_required
 def create():
+    is_logged = session['logged_in']
+    data = request.get_json()
     user = get_current_user()
-    if request.method == 'POST' and request.form['content']:
+    if request.method == 'POST' and data['image'] and data['text']:
         try:
             post = Post.create(
                 user=user,
-                image=request.form['image'],
-                text=request.form['text'],
+                image=data['image'],
+                text=data['text'],
                 datetime=datetime.datetime.now())
             flash('Your message has been created')
         except IntegrityError():
             flash('Cannot post due to words limit or picture size')
-        return redirect(url_for('user_page', username=user.username))
+            return Response(status=400)
+        return Response(status=201)
+        #return redirect(url_for('user_page', username=user.username))
 
-    return render_template('create.html')
+    return Response(status=400)
+
 
 
 @api.context_processor

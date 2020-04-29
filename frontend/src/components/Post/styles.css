@@ -1,0 +1,14 @@
+ .post {
+    width: 100%; 
+}
+
+.description {
+    padding: 20px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}   
+
+img {
+    width: 100%;
+}
