@@ -1,4 +1,5 @@
 from peewee import *
+from database import *
 import os
 
 dir_path = os.path.dirname(__file__)
@@ -18,12 +19,12 @@ class User(BaseModel):
         return (Post
                 .select()
                 .where(Post.user == self)
-                .orderby(Post.datetime))
+                .order_by(Post.datetime))
 
 
 class Post(BaseModel):
     # TODO: image class for storing and uploading images
-    image = CharField()
+    filename = CharField()
     text = CharField(140)
     datetime = DateTimeField()
     user = ForeignKeyField(User, backref='posts')

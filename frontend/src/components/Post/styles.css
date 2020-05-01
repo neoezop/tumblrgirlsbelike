@@ -3,7 +3,7 @@
 }
 
 .description {
-    padding: 20px;
+    padding: 25px;
     white-space: pre-wrap;
     overflow-wrap: break-word;
     word-wrap: break-word;
@@ -11,4 +11,11 @@
 
 img {
     width: 100%;
+}
+
+hr {
+    height:1px;
+    border-width:0;
+    color:gray;
+    background-color:gray
 }

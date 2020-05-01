@@ -1,8 +1,18 @@
 .header { 
-    padding-top: 0.1vw;
-    padding-bottom: 0.1vw;
+    padding-bottom: 30px;
 }
 
 h1 {
     font-size: 3em;
+}
+
+button { 
+  background-color: rgb(228, 228, 228); /* Green */
+  border: none;
+  color: white;
+  padding: 10px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
 }
