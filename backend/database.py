@@ -19,12 +19,13 @@ class User(BaseModel):
         return (Post
                 .select()
                 .where(Post.user == self)
-                .order_by(Post.datetime))
+                .order_by(Post.datetime.desc()))
 
 
 class Post(BaseModel):
     # TODO: image class for storing and uploading images
-    filename = CharField()
+    post_key = CharField(16)
+    file_extension = CharField(8)
     text = CharField(140)
     datetime = DateTimeField()
     user = ForeignKeyField(User, backref='posts')

@@ -1,9 +1,11 @@
  .post {
     width: 100%; 
+    position: relative;
 }
 
 .description {
-    padding: 25px;
+    padding-bottom: 40px;
+    padding-top: 15px;
     white-space: pre-wrap;
     overflow-wrap: break-word;
     word-wrap: break-word;
@@ -19,3 +21,16 @@ hr {
     color:gray;
     background-color:gray
 }
+
+.post .delete {
+    background-color: rgba(128, 128, 128, 0.1);
+    
+    color: gray;
+    float: right;
+    margin: 10px;
+    padding: 0;
+    cursor: pointer; 
+    position: absolute;
+    left: calc(100% - 55px);
+}
+.delete:focus {outline:1;}

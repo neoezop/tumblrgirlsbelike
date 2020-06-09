@@ -16,6 +16,10 @@ import mimetypes
 import fleep
 import pathlib
 import os
+import siphash
+
+
+SIPHASH_KEY = b'0123456789ABCDEF'
 
 dir_path = os.path.dirname(__file__)
 
@@ -29,6 +33,7 @@ class BadFormatException(Exception):
 def login_required(f):
     @wraps(f)
     def inner(*args, **kwargs):
+        print(str(session.get('logged_in')) + ' ' + str(session.get('username')))
         if not session.get('logged_in'):
             return Response(status=403)
         return f(*args, **kwargs)
@@ -120,22 +125,45 @@ def logout():
 @api.route('/<username>/')
 def user_page(username):
     user = get_object_or_404(User, User.username == username)
-    posts = user.get_posts()
-    # должен возвращать список айдишников постов, инфу об аккаунте
-    # filename = 'content_storage/1.jpg'
-    # return send_file(filename, attachment_filename="1.jpg")
-    # None
-    return get_user_posts_ids()
+    return jsonify({'username': user.username, 'postIds': [post.post_key for post in user.get_posts()]})
 
 
-def get_user_posts_ids():
-    pass
+@api.route('/post/<post_key>/')
+def get_post(post_key):
+    post = Post.get(Post.post_key == post_key)
+    post_dict = model_to_dict(post)
+    try:
+        file_data = get_post_file(post)
+    except:
+        post_dict['fileData'] = 'empty'
+    else:
+        post_dict['fileData'] = file_data
+    return jsonify(post_dict)
 
 
-@api.route('/post/<post_id>/')
-def get_post(post_id):
-    post = Post.get_by_id(int(post_id))
-    return jsonify(model_to_dict(post))
+@api.route('/delete/<post_key>/', methods=['DELETE'])
+def delete_post(post_key):
+    try:
+        post = Post.get(Post.post_key == post_key)
+    except:
+        return Response(status=404)
+
+    if User.get_by_id(post.user_id).username == session.get('username'):
+        delete_image_from_storage(post)
+        post.delete_instance()
+        return Response(status=200)
+    else:
+        return Response(status=403)
+
+
+
+def get_post_file(post: Post):
+    filename = f'{post.post_key}.{post.file_extension}'
+
+    path = os.path.join(dir_path, 'content_storage', filename)
+    with open(path, 'rb') as f:
+        data = base64.b64encode(f.read()).decode('utf-8')
+        return data
 
 
 @api.route('/create/', methods=['POST'])
@@ -143,16 +171,20 @@ def get_post(post_id):
 def create():
     data = request.get_json()
     user = get_current_user()
-    if data['imageData'] and data['text']:
+    if data['imageData']:
+        description = ''
+        if data['text']:
+            description = data['text']
         try:
-            filename = store_image_data(data['imageData'])
+            post_key, extension = store_image_data(data['imageData'])
         except BadFormatException:
             return Response(status=422)
         try:
             post = Post.create(
                 user=user,
-                filename=filename,
-                text=data['text'],
+                post_key=post_key,
+                file_extension=extension,
+                text=description,
                 datetime=datetime.datetime.now())
             flash('Your message has been created')
         except IntegrityError():
@@ -170,15 +202,21 @@ def store_image_data(image_data: str) -> str:
     if len(file_extensions) == 0 or file_extensions[0] not in allowable_extensions:
         raise BadFormatException(f"file should be one of these: {', '.join(allowable_extensions)}")
 
-    filename = generate_image_name()
-    with open(f"{dir_path}\\content_storage\\{filename}.{file_extensions[0]}", 'wb') as f:
+    post_key = generate_post_key()
+    file_path = os.path.join(dir_path, 'content_storage', f'{post_key}.{file_extensions[0]}')
+    with open(file_path, 'wb') as f:
         f.write(image_string)
-    return filename
+    return post_key, file_extensions[0]
+
+def delete_image_from_storage(post: Post):
+    file_path = os.path.join(dir_path, 'content_storage', f'{post.post_key}.{post.file_extension}')
+    os.remove(file_path)
 
 
-# TODO
-def generate_image_name() -> str:
-    return "IMAGENAME"
+
+def generate_post_key() -> str:
+    s = str(datetime.datetime.now()) + session['username']
+    return siphash.SipHash_2_4(SIPHASH_KEY, bytearray(s.encode('utf-8'))).hexdigest().decode('utf-8')
 
 
 @api.context_processor
