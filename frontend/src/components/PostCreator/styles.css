@@ -3,16 +3,17 @@
     width: 100%;
     border-radius: 4px;
     box-sizing: border-box;
+    resize: none;
   }
 
   input[type='file'] {
     display: none;
   }
 
-  .preview {
+  
+  .previewImage {
     object-fit: scale-down;  
-    width: 100%;
-    height: 150px;
+    height: 100%;
     width: 150px;
   }
 
@@ -22,5 +23,31 @@
   }
 
   .postCreator { 
+    padding: 20px;
+    background-color: mintcream;
+  }
+
+  .postElements * {
+    margin: 20px;
+  }
+
+  .upload {
+    display: inline-block;
+  }
+
+  .postElements {
     display: flex;
+  }
+
+  .buttons {
+    justify-content: center;
+    display: flex;
+  }
+
+  .buttons * {
+    margin: 0px 10px;
+  }
+
+  .cancel {
+    background-color: rgb(248, 154, 138);
   }

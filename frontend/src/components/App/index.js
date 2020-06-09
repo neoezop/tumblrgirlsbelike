@@ -9,7 +9,7 @@ export default class App extends React.Component {
       <div className="App">
         <div className="container">
           <div className="row center-xs">
-            <div className="col-xs-12">
+            <div className="col-lg-8 col-md-10">
               <Feed/>
             </div>
           </div>

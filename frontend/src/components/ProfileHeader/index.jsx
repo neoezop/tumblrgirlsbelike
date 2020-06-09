@@ -16,12 +16,14 @@ import PostCreator from '../PostCreator'
         })
       }
 
+      
+
       render() {
         return (
           <div className="header">
             <h1>{this.props.username}</h1>
             {this.state.isPostCreatorOpened ? (
-              <PostCreator onPostLoad={this.forceUpdate.bind(this)} />
+              <PostCreator onPostUpload={this.props.onPostUpload} onClose={this.switchPostCreatorState.bind(this)}/>
             ) : (
               <button className="upload" onClick={this.switchPostCreatorState}>upload</button>
             )}

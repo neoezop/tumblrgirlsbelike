@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 import "./styles.css";
+import { Clear } from "@material-ui/icons";
 
 export default class PostCreator extends Component {
   constructor(props) {
     super(props);
-    this.preview = React.createRef();
     this.state = {
       image: "",
     };
@@ -36,6 +36,7 @@ export default class PostCreator extends Component {
       return;
     }
     let file = event.target.files[0];
+    //переделать, чтобы не вызывать логин каждый раз
     fetch("http://127.0.0.1:5000/login/", {
       method: "POST",
       headers: {
@@ -49,60 +50,81 @@ export default class PostCreator extends Component {
     })
       .then((res) => this.readFileDataAsBase64(file))
       .then((data) => {
-        //preview image
-        this.preview.current.src = data;
-        return data;
-      })
-      .then((data) => {
-        return data.split(/,(.+)/)[1];
-      })
-      .then((data) =>
-        fetch("http://127.0.0.1:5000/create/", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json;charset=utf-8",
-          },
-          body: JSON.stringify({
-            text: this.description.value,
-            imageData: data,
-          }),
-        })
-      )
-      .then((res) => this.props.onPostLoad());
+        this.setState({
+          image: data,
+        });
+      });
+  }
+
+  handleUpload() {
+    let data = this.state.image.split(/,(.+)/)[1];
+
+    fetch("http://127.0.0.1:5000/create/", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json;charset=utf-8",
+      },
+      body: JSON.stringify({
+        text: this.description.value,
+        imageData: data,
+      }),
+    });
+    this.props.onPostUpload({description: this.description.value, image: data, datetime: new Date(), id: (+new Date).toString(36)})
+    this.handleClose();
+  }
+
+  clearPreviewImage() {
+    this.setState({
+      image: "",
+    });
+  }
+
+  handleClose() {
+    this.props.onClose();
   }
 
   render() {
     return (
       <div className="postCreator">
-        {true ? (
-          <button
-            className="selector"
-            onClick={this.triggerChooseFile.bind(this)}
-          >
-            select image
+        <div className="postElements">
+          {this.state.image === "" ? (
+            <button
+              className="selector"
+              onClick={this.triggerChooseFile.bind(this)}
+            >
+              select image
+            </button>
+          ) : (
+            <img className="previewImage" src={this.state.image} alt=""></img>
+          )}
+
+          <textarea
+            className="create-description"
+            placeholder="Description..."
+            maxLength="140"
+            ref={(description) => (this.description = description)}
+          />
+        </div>
+
+        <div className="buttons">
+          {this.state.image !== "" ? (
+            <button className="upload" onClick={this.handleUpload.bind(this)}>upload</button>
+          ) : (
+            <></>
+          )}
+
+          <button className="cancel" onClick={this.handleClose.bind(this)}>
+            cancel
           </button>
-        ) : (
-          <img
-            className="preview"
-            ref={this.preview}
-            src={this.state.image}
-            alt=""
-          ></img>
-        )}
+        </div>
+
         <input
           ref={(input) => (this.input = input)}
           type="file"
           accept="image/jpeg, image/png"
           onChange={(e) => this.handleFile(e)}
         ></input>
-
-        <input
-          className="create-description"
-          placeholder="Description..."
-          maxLength="140"
-          ref={(description) => (this.description = description)}
-        />
       </div>
     );
   }

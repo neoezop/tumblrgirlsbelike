@@ -210,7 +210,8 @@ def store_image_data(image_data: str) -> str:
 
 def delete_image_from_storage(post: Post):
     file_path = os.path.join(dir_path, 'content_storage', f'{post.post_key}.{post.file_extension}')
-    os.remove(file_path)
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
 
 
