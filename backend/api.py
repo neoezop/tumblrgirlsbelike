@@ -9,15 +9,9 @@ from flask import url_for, abort, render_template, flash
 from functools import wraps
 from hashlib import md5
 from database import *
-from playhouse.shortcuts import model_to_dict, dict_to_model
-import base64
-from PIL import Image
-import mimetypes
-import fleep
-import pathlib
+from playhouse.shortcuts import model_to_dict
 import os
-import siphash
-
+import content_storage as storage
 
 SIPHASH_KEY = b'0123456789ABCDEF'
 
@@ -133,7 +127,7 @@ def get_post(post_key):
     post = Post.get(Post.post_key == post_key)
     post_dict = model_to_dict(post)
     try:
-        file_data = get_post_file(post)
+        file_data = storage.get_post_file(post)
     except:
         post_dict['fileData'] = 'empty'
     else:
@@ -149,21 +143,11 @@ def delete_post(post_key):
         return Response(status=404)
 
     if User.get_by_id(post.user_id).username == session.get('username'):
-        delete_image_from_storage(post)
+        storage.delete_image_from_storage(post)
         post.delete_instance()
         return Response(status=200)
     else:
         return Response(status=403)
-
-
-
-def get_post_file(post: Post):
-    filename = f'{post.post_key}.{post.file_extension}'
-
-    path = os.path.join(dir_path, 'content_storage', filename)
-    with open(path, 'rb') as f:
-        data = base64.b64encode(f.read()).decode('utf-8')
-        return data
 
 
 @api.route('/create/', methods=['POST'])
@@ -176,7 +160,7 @@ def create():
         if data['text']:
             description = data['text']
         try:
-            post_key, extension = store_image_data(data['imageData'])
+            post_key, extension = storage.store_image_data(data['imageData'])
         except BadFormatException:
             return Response(status=422)
         try:
@@ -192,32 +176,6 @@ def create():
             return Response(status=400)
         return Response(status=201)
     return Response(status=400)
-
-
-def store_image_data(image_data: str) -> str:
-    image_string = base64.b64decode(image_data)
-    file_extensions = fleep.get(image_string).extension
-    allowable_extensions = ['png', 'jpg']
-
-    if len(file_extensions) == 0 or file_extensions[0] not in allowable_extensions:
-        raise BadFormatException(f"file should be one of these: {', '.join(allowable_extensions)}")
-
-    post_key = generate_post_key()
-    file_path = os.path.join(dir_path, 'content_storage', f'{post_key}.{file_extensions[0]}')
-    with open(file_path, 'wb') as f:
-        f.write(image_string)
-    return post_key, file_extensions[0]
-
-def delete_image_from_storage(post: Post):
-    file_path = os.path.join(dir_path, 'content_storage', f'{post.post_key}.{post.file_extension}')
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-
-
-def generate_post_key() -> str:
-    s = str(datetime.datetime.now()) + session['username']
-    return siphash.SipHash_2_4(SIPHASH_KEY, bytearray(s.encode('utf-8'))).hexdigest().decode('utf-8')
 
 
 @api.context_processor
