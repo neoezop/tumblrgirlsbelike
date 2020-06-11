@@ -3,14 +3,14 @@ import "./styles.css";
 import Post from "../Post";
 import ProfileHeader from "../ProfileHeader";
 
-class Feed extends Component {
+export default class Profile extends Component {
   constructor(props) {
     super(props);
     this.state = {
       posts: [],
       postIds: [],
       clientSidePosts: [],
-      username: "%undefined%",
+      username: this.props.match.params.id,
     };
   }
 
@@ -35,7 +35,7 @@ class Feed extends Component {
   }
 
   fetchUserData() {
-    return fetch("http://127.0.0.1:5000/admin/")
+    return fetch(`http://127.0.0.1:5000/${this.state.username}/`)
       .then((res) => res.json())
       .then((data) =>
         this.setState({
@@ -102,5 +102,3 @@ class Feed extends Component {
     );
   }
 }
-
-export default Feed;

@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import "./styles.css";
-import { Clear } from "@material-ui/icons";
 
 export default class PostCreator extends Component {
   constructor(props) {
@@ -36,19 +35,7 @@ export default class PostCreator extends Component {
       return;
     }
     let file = event.target.files[0];
-    //переделать, чтобы не вызывать логин каждый раз
-    fetch("http://127.0.0.1:5000/login/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json;charset=utf-8",
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        username: "admin",
-        password: "admin",
-      }),
-    })
-      .then((res) => this.readFileDataAsBase64(file))
+     this.readFileDataAsBase64(file)
       .then((data) => {
         this.setState({
           image: data,

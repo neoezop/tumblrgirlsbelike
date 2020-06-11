@@ -72,6 +72,11 @@ def after_request(response):
     return response
 
 
+@api.route('/status/')
+def status():
+    return jsonify({"logged_in" : session.get('logged_in'), "username": session.get('username')})
+
+
 @api.route('/register/', methods=['POST'])
 def register():
     data = request.get_json()
@@ -115,7 +120,6 @@ def logout():
     return Response(status=200)
 
 
-# TODO
 @api.route('/<username>/')
 def user_page(username):
     user = get_object_or_404(User, User.username == username)
