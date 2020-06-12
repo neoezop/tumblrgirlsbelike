@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import "./styles.css";
 
-let undefined_status = "%undefinded%"
+let undefined_status = "%undefinded%";
 
 export default class AuthStatus extends Component {
   constructor(props) {
@@ -14,6 +14,11 @@ export default class AuthStatus extends Component {
   }
 
   componentDidMount() {
+    this.updateAuthenticationStatus();
+  }
+
+  updateAuthenticationStatus()
+  {
     fetch("http://127.0.0.1:5000/status/", {
       method: "GET",
       credentials: "include",
@@ -25,7 +30,28 @@ export default class AuthStatus extends Component {
           logged_in: data["logged_in"],
           username: data["username"] ? data["username"] : undefined_status,
         });
+        return this.state.username;
+      })
+      .then(username => {
+        this.props.onAuthUpdate(username !== undefined_status? username : null);
+        console.log(username)
       });
+
+  }
+
+  handleLogout()
+  {
+    fetch('http://127.0.0.1:5000/logout', {
+      method: "GET",
+      credentials: "include"
+    })
+    .then(res => {
+      this.setState({
+        logged_in: false,
+        username: undefined_status
+      });
+    })
+    .then(this.props.onAuthUpdate(null));
   }
 
   render() {
@@ -33,9 +59,17 @@ export default class AuthStatus extends Component {
       <div>
         {this.state.status_checked ? (
           this.state.logged_in ? (
-            <label>logged as {this.state.username}</label>
+            <div>
+              <label>logged as </label>
+          <a href={`/${this.state.username}`}>{this.state.username}</a>
+          <br/>
+          (
+
+            <button className="logout" onClick={this.handleLogout.bind(this)}>logout</button>
+          )
+            </div>
           ) : (
-            <label>not logged in</label>
+            <a href="/login">log in</a>
           )
         ) : (
           <></>

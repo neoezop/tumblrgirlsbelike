@@ -10,12 +10,3 @@ h1 {
   text-align: center;
 }
 
-button {
-  background-color: rgb(187, 187, 187);
-  border: none;
-  color: white;
-  font-size: 16px;
-  display: inline-block;
-  padding: 10px 32px;
-  text-decoration: none;
-}

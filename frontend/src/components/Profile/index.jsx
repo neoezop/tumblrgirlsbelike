@@ -2,15 +2,18 @@ import React, { Component } from "react";
 import "./styles.css";
 import Post from "../Post";
 import ProfileHeader from "../ProfileHeader";
+import AuthStatus from '../AuthStatus'
 
 export default class Profile extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      currentUser: null,
       posts: [],
       postIds: [],
       clientSidePosts: [],
       username: this.props.match.params.id,
+      pageExists: false,
     };
   }
 
@@ -41,13 +44,13 @@ export default class Profile extends Component {
         this.setState({
           username: data["username"],
           postIds: data["postIds"],
+          pageExists: true
         })
       );
   }
 
   getPostsToDisplay() {
     let postsFromServer = [];
-    console.log(this.state.posts);
     let sortedByDatePosts = this.sortPostsByDate(this.state.posts);
 
 
@@ -80,17 +83,30 @@ export default class Profile extends Component {
     }
   }
 
+  updateCurrentUser(currentUser)
+  {
+    this.setState({
+      currentUser: currentUser
+    })
+  }
+
   render() {
+    if (!this.state.pageExists) return "page does not exist";
+
     return (
       <div className="feed">
+        
+        <AuthStatus onAuthUpdate={this.updateCurrentUser.bind(this)}></AuthStatus>
         <ProfileHeader
           username={this.state.username}
           onPostUpload={this.addPost.bind(this)}
+          currentUser={this.state.currentUser}
         />
         {
         }
         {this.getPostsToDisplay().map((post) => (
           <Post
+            canDelete={this.state.currentUser === this.state.username}
             image={post.image}
             description={post.description}
             datetime={post.datetime}

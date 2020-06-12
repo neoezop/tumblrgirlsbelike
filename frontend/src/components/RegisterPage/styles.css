@@ -1,0 +1,28 @@
+.registerPage {
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+}
+
+.registerInput {
+    align-items: center;
+    margin: auto;
+    display: inline-block;
+}
+
+
+.registerInput *{ 
+    margin: 20px;
+}
+
+.registerInput input {
+    font-size: 16px;
+    display: block;
+    padding: 10px 32px;
+    text-decoration: none;
+}
+
+.errorMessage {
+    color: red;
+    display: block;
+}

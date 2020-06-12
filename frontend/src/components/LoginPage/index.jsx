@@ -75,6 +75,9 @@ export default class LoginPage extends Component {
             ) : (
               ""
             )}
+            <label>Have no account yet?</label>
+            <a href="/register">Register</a>
+            <br></br>
             <button onClick={this.handleLogin.bind(this)}>login</button>
           </div>
         </div>

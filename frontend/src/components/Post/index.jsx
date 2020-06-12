@@ -6,8 +6,7 @@ class Post extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            isDeleted: false,
-            isCurrentUserPage: true
+            isDeleted: false
         }
     }
     
@@ -25,7 +24,7 @@ class Post extends Component {
       if (this.state.isDeleted) return <div></div>;
         return (
           <div className="post">
-            {this.state.isCurrentUserPage ? (
+            {this.props.canDelete ? (
               <button
                 className="delete"
                 title="Delete post"

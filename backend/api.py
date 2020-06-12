@@ -82,6 +82,8 @@ def register():
     data = request.get_json()
     if request.method == 'POST' and data['username']:
         pw_hash = md5(data['password'].encode('utf-8')).hexdigest()
+        if data['username'] is "":
+            return Response(status=400)
         try:
             with db.atomic():
                 user = User.create(
@@ -89,7 +91,7 @@ def register():
                     password=pw_hash)
         except IntegrityError:
             # Возвращается, если аккаунт уже создан (мб поменять код ошибки)
-            return Response(status=200)
+            return Response(status=409)
         else:
             auth_user(user)
             return Response(status=201)
@@ -116,6 +118,7 @@ def login():
 @api.route('/logout/')
 def logout():
     session.pop('logged_in', None)
+    session.pop('username', None)
     flash('You were logged out')
     return Response(status=200)
 
